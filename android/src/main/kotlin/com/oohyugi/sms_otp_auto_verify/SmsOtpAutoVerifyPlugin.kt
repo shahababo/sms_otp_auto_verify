@@ -1,12 +1,9 @@
 package com.oohyugi.sms_otp_auto_verify
 
 import android.app.Activity
-import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.telephony.TelephonyManager
-import com.google.android.gms.auth.api.credentials.Credentials
-import com.google.android.gms.auth.api.credentials.HintRequest
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import com.google.android.gms.auth.api.phone.SmsRetrieverClient
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -48,10 +45,12 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, 
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        if (call.method == "startListening") {
-            startListening()
-        } else {
-            result.notImplemented()
+        when (call.method) {
+            "startListening" -> {
+                startListening()
+                result.success(null)
+            }
+            else -> result.notImplemented()
         }
     }
 
@@ -59,15 +58,26 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, 
         activity?.let {
             client = SmsRetriever.getClient(it)
         }
+
         val task = client?.startSmsRetriever()
         task?.addOnSuccessListener {
             receiver = SmsBroadcastReceiver()
-            receiver?.setSmsListener(this) // Ensure this matches the expected type
+            receiver?.setSmsListener(this) // Attach listener to the receiver
             activity?.registerReceiver(receiver, IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION))
+        }?.addOnFailureListener {
+            // Handle failure to start SMS Retriever
         }
     }
 
     override fun onSmsReceived(sms: String) {
-        // Handle received SMS
+        channel?.invokeMethod("onSmsReceived", sms)
+        cleanupReceiver()
+    }
+
+    private fun cleanupReceiver() {
+        receiver?.let {
+            activity?.unregisterReceiver(it)
+            receiver = null
+        }
     }
 }

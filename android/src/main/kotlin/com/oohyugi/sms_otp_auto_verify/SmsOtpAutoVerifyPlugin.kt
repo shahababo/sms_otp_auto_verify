@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-
 import android.content.IntentFilter
 import android.content.IntentSender
 import android.os.Build
@@ -13,8 +12,8 @@ import android.util.Log
 import com.google.android.gms.auth.api.credentials.Credential
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import com.google.android.gms.auth.api.phone.SmsRetriever;
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import com.google.android.gms.auth.api.phone.SmsRetriever
 import com.google.android.gms.auth.api.phone.SmsRetrieverClient
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -23,8 +22,6 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.PluginRegistry
 import com.google.android.gms.auth.api.credentials.Credentials
 import com.google.android.gms.auth.api.credentials.HintRequest
-import io.flutter.plugin.common.PluginRegistry.Registrar
-
 
 /** SmsOtpAutoVerifyPlugin */
 class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
@@ -67,10 +64,8 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
             plugin.channel = MethodChannel(binaryMessenger, channelName)
             plugin.channel?.setMethodCallHandler(plugin)
             plugin.binding?.addActivityResultListener(plugin.activityResultListener)
-
         }
     }
-
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         setup(plugin = this, binding.binaryMessenger)
@@ -87,25 +82,20 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
                     val signature = AppSignatureHelper(it).getAppSignatures()[0]
                     result.success(signature)
                 }
-
             }
             "startListening" -> {
                 this.pendingResult = result
                 receiver = SmsBroadcastReceiver()
                 startListening()
-
             }
             "stopListening" -> {
                 pendingResult = null
                 unregister()
             }
-
             "requestPhoneHint" -> {
                 this.pendingResult = result
                 requestHint()
-
             }
-
             else -> result.notImplemented()
         }
     }
@@ -152,22 +142,18 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 activity?.registerReceiver(receiver, IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION),
                     Context.RECEIVER_EXPORTED)
-            }
-            else {
+            } else {
                 activity?.registerReceiver(receiver, IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION))
             }
-
         }
-
-
     }
 
     private fun unregister() {
         alreadyCalledSmsRetrieve = false
-        if (receiver!=null){
+        if (receiver != null) {
             try {
                 activity?.unregisterReceiver(receiver)
-                Log.d(javaClass::getSimpleName.name, "task stoped")
+                Log.d(javaClass::getSimpleName.name, "task stopped")
                 receiver = null
             } catch (e: Exception) {
             }
@@ -179,21 +165,20 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
             if (!alreadyCalledSmsRetrieve) {
                 pendingResult?.success(it)
                 alreadyCalledSmsRetrieve = true
-            }else{
-                Log.d( "onOtpReceived: ", "already called")
+            } else {
+                Log.d("onOtpReceived: ", "already called")
             }
         }
-
     }
 
     override fun onOtpTimeout() {
     }
 
-
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
         this.binding = binding
-        binding.addActivityResultListener(activityResultListener); }
+        binding.addActivityResultListener(activityResultListener)
+    }
 
     override fun onDetachedFromActivityForConfigChanges() {
         unregister()
@@ -202,12 +187,10 @@ class SmsOtpAutoVerifyPlugin : FlutterPlugin, MethodCallHandler,
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
         this.binding = binding
-        binding.addActivityResultListener(activityResultListener);
+        binding.addActivityResultListener(activityResultListener)
     }
 
     override fun onDetachedFromActivity() {
         unregister()
     }
-
-
 }
